@@ -11,11 +11,21 @@ function Message({ message, currentUser, onMessageDelete, onUpdateMessage }) {
   const isCurrentUser = currentUser.username === username;
 
   function handleDeleteClick() {
+    // Optimistically update the UI
+    onMessageDelete(id);
+
     fetch(`http://127.0.0.1:5555/messages/${id}`, {
       method: "DELETE",
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Failed to delete the message");
+      }
+    })
+    .catch(error => {
+      console.error("Error deleting message:", error);
+      // Optionally revert the UI update if deletion fails
     });
-
-    onMessageDelete(id);
   }
 
   function handleUpdateMessage(updatedMessage) {
@@ -36,7 +46,7 @@ function Message({ message, currentUser, onMessageDelete, onUpdateMessage }) {
       ) : (
         <p>{body}</p>
       )}
-      {isCurrentUser ? (
+      {isCurrentUser && (
         <div className="actions">
           <button onClick={() => setIsEditing((isEditing) => !isEditing)}>
             <span role="img" aria-label="edit">
@@ -49,7 +59,7 @@ function Message({ message, currentUser, onMessageDelete, onUpdateMessage }) {
             </span>
           </button>
         </div>
-      ) : null}
+      )}
     </li>
   );
 }
